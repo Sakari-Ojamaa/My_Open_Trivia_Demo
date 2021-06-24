@@ -63,6 +63,7 @@ public class UI_Behave : MonoBehaviour
         {
             cats.Add(cat.name);            
         }
+
         Category.ClearOptions();
         Category.AddOptions(cats);
     }
