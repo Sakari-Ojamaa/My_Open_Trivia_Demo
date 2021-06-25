@@ -17,6 +17,7 @@ public class TokenClass
 
     //public TokenClass NewToken = new TokenClass();
 }
+[System.Serializable]
 public class Categories
 {
     /* Format of category request response
@@ -33,6 +34,7 @@ public class Categories
     */
     public List<category> trivia_categories;
 }
+[System.Serializable]
 public class category
 {
     /* This format contained above         
@@ -41,3 +43,4 @@ public class category
     public int id;
     public string name;
 }
+
