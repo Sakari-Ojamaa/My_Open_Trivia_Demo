@@ -8,6 +8,9 @@ using UnityEngine.UI;
 
 public class UI_Behave : MonoBehaviour
 {
+
+    //This will be scuffed, sorry
+
     public Button NewGameButton,StartButton,GameModeButton1, GameModeButton2;
     public Dropdown Category, Difficulty;
     public InputField QuestionCountField;
@@ -21,6 +24,11 @@ public class UI_Behave : MonoBehaviour
     Categories AllCategories = new Categories();
     WWWForm ParamForm;
 
+    private int diffNumber = 0;
+    private int roundCount = 10;
+    private int categoryPH = 0;
+    private string typePH = "multiple";
+
     //https://opentdb.com/api.php?amount=7&category=9&difficulty=medium&type=multiple
     private void Awake()
     {   //Webfomr to contain game parameters later, amount of games, difficulty, selected category.
@@ -32,6 +40,7 @@ public class UI_Behave : MonoBehaviour
         catDebug = new List<category>();
         cats = new List<string>();
         SetCategory();
+        ///StartCoroutine(GetDifficulty(diffBug));
         //StartCoroutine(GetCategory(categoryStorage));
 
         Difficulty.ClearOptions();
@@ -41,9 +50,9 @@ public class UI_Behave : MonoBehaviour
         GameModeButton2.onClick.AddListener(delegate { gameType(1); });
 
         QuestionCountField.onValueChanged.AddListener(delegate { setCount(int.Parse(QuestionCountField.text)); });
-
-        Category.onValueChanged.AddListener(delegate { setCategoryForm(Category.value); });
-        Difficulty.onValueChanged.AddListener(delegate { setDifficultyForm(Category.value); });
+        //{ setCategoryForm(Category.itemText.text); });
+        Category.onValueChanged.AddListener(delegate { setCategoryForm(Category.value); }); //Listener will pass index selected item
+        Difficulty.onValueChanged.AddListener(delegate { setDifficultyForm(Difficulty.value); });
     }
 
     void NewGame()
@@ -80,33 +89,71 @@ public class UI_Behave : MonoBehaviour
 
     void gameType(int i) //multiple clics could corrupt the WWWForm
     {
-        if(i == 0) ParamForm.AddField("type", "multiple");
-        else ParamForm.AddField("type", "bool"); 
-
-        
-
+        if (i == 0) typePH = "multiple";//ParamForm.AddField("type", "multiple");
+        else typePH = "bool"; //ParamForm.AddField("type", "bool");
     }
-    void setCount(int i) //multiple clics could corrupt the WWWForm
+    void setCount(int i)
     {
-        ParamForm.AddField("count", i);        
+        roundCount = i;
     }
-    void setCategoryForm(int i) //multiple clics could corrupt the WWWForm
+    void setCategoryForm(int i) 
     {
+        /*
         //get ID from string. AllCategories has the stuff
-        ParamForm.AddField("category", i);
+        //ParamForm.AddField("category", i);
+        foreach (category cat in AllCategories.trivia_categories) //go through list of categories with string/int pairs from API
+        {
+            if (cat.name == i) //compare selected string from dropdown to each string in list of categories.
+            {
+                categoryPH = cat.id; // API understands categories as int/id, get ID of selected category.
+                //ParamForm.AddField("category", cat.id); 
+                break; //end loop
+            }
+        } //no field for "category" is added if no recognized category is selected, open trivia acts on default
+        */
+        categoryPH = i; //honestly, I thought I would need this var, I'll keep it for no reason.
     }
-    void setDifficultyForm(int i) //multiple clics could corrupt the WWWForm
+    void setDifficultyForm(int i) 
     {
-        ParamForm.AddField("difficulty", i);
+        diffNumber = i; 
+        //ParamForm.AddField("difficulty", i);
     }
 
     void StartGame()
     {
         Debug.Log("Start Game!");
-        //GetToken();
-        //tokenBugger();
-        //catBugger();
-        //StartCoroutine(SendParam());
+        ParamForm.AddField("token", TokenDebug); //pre token for sending in the form
+
+        //ParamForm.AddField("category", categoryPH);
+        
+        foreach (category cat in AllCategories.trivia_categories) //go through list of categories with string/int pairs from API
+        {
+            if (cat.name == Category.itemText.text) //compare selected string from dropdown to each string in list of categories.
+            {
+                ParamForm.AddField("category", cat.id); // API understands categories as int/id, get ID of selected category.
+                break; //end loop
+            }
+        } //no field for "category" is added if no recognized category is selected, open trivia acts on default
+        
+
+        switch (diffNumber) //Difficulties cannot be pulled from API like categories, requires hard definitions for each element in dropdown.
+        {
+            case 0: //No field is added if none is selected, open trivia acts on default
+                //ParamForm.AddField("difficulty", "");
+                break;
+            case 1:
+                ParamForm.AddField("difficulty", "easy");
+                break;
+            case 2:
+                ParamForm.AddField("difficulty", "medium");
+                break;
+            case 3:
+                ParamForm.AddField("difficulty", "hard");
+                break;
+        }
+        ParamForm.AddField("amount", roundCount);
+        ParamForm.AddField("type", typePH);
+
         StartCoroutine(SendParam(StartReturn));
     }
     void StartReturn(string fromweb)
@@ -152,11 +199,13 @@ public class UI_Behave : MonoBehaviour
         form.AddField("difficulty", "easy"); //easy, medium, hard
         form.AddField("type", "multiple"); //multiple, bool
         */
+
+        /*
         WWWForm form = new WWWForm();
         form = ParamForm;
         form.AddField("token", sendToken);
-
-        using (UnityWebRequest www = UnityWebRequest.Post("https://opentdb.com/api.php?", form)) //Let Unity handle formatting for passing parameters of game
+        */
+        using (UnityWebRequest www = UnityWebRequest.Post("https://opentdb.com/api.php?", ParamForm)) //Let Unity handle formatting for passing parameters of game
         {
             yield return www.SendWebRequest();
 
@@ -209,5 +258,10 @@ public class UI_Behave : MonoBehaviour
             Debug.Log(cat.name);
         }
         //Debug.Log(catDebug);
+    }
+
+    void diffBug(string fromweb)
+    {
+        Debug.Log(fromweb);
     }
 }
