@@ -43,7 +43,7 @@ public class UI_Behave : MonoBehaviour
         ///StartCoroutine(GetDifficulty(diffBug));
         //StartCoroutine(GetCategory(categoryStorage));
 
-        Difficulty.ClearOptions();
+        //Difficulty.ClearOptions();
         NewGameButton.onClick.AddListener(NewGame);
         StartButton.onClick.AddListener(StartGame);
         GameModeButton1.onClick.AddListener(delegate { gameType(0); }); 
