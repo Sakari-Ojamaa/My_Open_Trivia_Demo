@@ -25,6 +25,7 @@ public class UI_Behave : MonoBehaviour
     WWWForm ParamForm;
 
     private int diffNumber = 0;
+    private string diffText = "";
     private int roundCount = 10;
     private int categoryPH = 0;
     private string typePH = "multiple";
@@ -90,11 +91,19 @@ public class UI_Behave : MonoBehaviour
     void gameType(int i) //multiple clics could corrupt the WWWForm
     {
         if (i == 0) typePH = "multiple";//ParamForm.AddField("type", "multiple");
-        else typePH = "bool"; //ParamForm.AddField("type", "bool");
+        else typePH = "boolean"; //ParamForm.AddField("type", "bool");
     }
     void setCount(int i)
     {
         roundCount = i;
+        if (i <= 0)
+        {
+            roundCount = 1;
+        }
+        else if (i >= 50)
+        {
+            roundCount = 50;
+        }      
     }
     void setCategoryForm(int i) 
     {
@@ -142,12 +151,15 @@ public class UI_Behave : MonoBehaviour
                 //ParamForm.AddField("difficulty", "");
                 break;
             case 1:
+                diffText = "easy";
                 ParamForm.AddField("difficulty", "easy");
                 break;
             case 2:
+                diffText = "medium";
                 ParamForm.AddField("difficulty", "medium");
                 break;
             case 3:
+                diffText = "hard";
                 ParamForm.AddField("difficulty", "hard");
                 break;
         }
@@ -158,7 +170,7 @@ public class UI_Behave : MonoBehaviour
     }
     void StartReturn(string fromweb)
     {
-
+        Debug.Log(fromweb);
     }
 
     IEnumerator GetToken(System.Action<string> gibtoken) //With callback
@@ -178,7 +190,7 @@ public class UI_Behave : MonoBehaviour
                     break;
                 case UnityWebRequest.Result.Success:
                     string returnString = tokenRequest.downloadHandler.text;
-                    Debug.Log(":\nReceived: " + returnString);
+                    //Debug.Log(":\nReceived: " + returnString);
                     gibtoken(returnString); //Use callback to retrieve aquired token
                     //ThisToken = JsonUtility.FromJson<TokenClass>(returnString);
                     break;
@@ -191,33 +203,113 @@ public class UI_Behave : MonoBehaviour
         //https://opentdb.com/api.php?amount=7&category=9&difficulty=medium&type=multiple
         //https://opentdb.com/api.php?amount=5&category=9&difficulty=easy&type=boolean
         string sendToken = TokenDebug;
-        /*
-        WWWForm form = new WWWForm();
-        form.AddField("token", sendToken);
-        form.AddField("amount", 7);
-        form.AddField("category", 9); //based on ID, 9 is "general knowledge, first category.
-        form.AddField("difficulty", "easy"); //easy, medium, hard
-        form.AddField("type", "multiple"); //multiple, bool
-        */
+       
+        string uriA = "https://opentdb.com/api.php?";
 
+        string uriB = uriA + "&" +"amount="+ roundCount;
+        if (categoryPH != 0)
+        {
+            uriB = uriB + "&" + "category=" + categoryPH;
+        }
+        if (diffText != "")
+        {
+            uriB = uriB + "&" + "difficulty=" + diffText;
+        }        
+        uriB = uriB + "&" + "type=" + typePH + "&" + "token=" + TokenDebug;
+        Debug.Log(uriB);
+        yield return "";
+        //uriB = uriA + "&" + roundCount + "&" + categoryPH + "&" + diffText;
+
+        
+        using (UnityWebRequest www = UnityWebRequest.Get(uriB)) //Let Unity handle formatting for passing parameters of game
+        {
+            yield return www.SendWebRequest();
+
+            switch (www.result)
+            {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(": Error: " + www.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(": HTTP Error: " + www.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+
+                    Debug.Log("Form upload complete!");
+
+                    Debug.Log("Text lenth:"+www.downloadHandler.text.Length);
+                    Debug.Log("Data:" + www.downloadHandler.data);
+                    Debug.Log("Text:" + www.downloadHandler.text.ToString());
+                    Debug.Log("Request object:" + www);
+                    Debug.Log("Result:" + www.result);
+                    Debug.Log("URI:" + www.uri);
+                    Debug.Log("URL:" + www.url);
+
+                    string returnString = www.downloadHandler.text;
+                    Debug.Log(":\nReceived: " + returnString);
+                    gibAny(returnString);
+
+                    break;
+            }
+            
         /*
-        WWWForm form = new WWWForm();
-        form = ParamForm;
-        form.AddField("token", sendToken);
-        */
         using (UnityWebRequest www = UnityWebRequest.Post("https://opentdb.com/api.php?", ParamForm)) //Let Unity handle formatting for passing parameters of game
         {
             yield return www.SendWebRequest();
 
-            if (www.result != UnityWebRequest.Result.Success)
+            Debug.Log(ParamForm);
+            Debug.Log(ParamForm.data);
+            Debug.Log(ParamForm.headers);
+            switch (www.result)
             {
-                Debug.Log(www.error);
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError(": Error: " + www.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError(": HTTP Error: " + www.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+
+                    Debug.Log("Form upload complete!");
+
+                    Debug.Log(www.downloadHandler.text.Length);
+                    Debug.Log(www.downloadHandler.data);
+                    Debug.Log(www.downloadHandler.text.ToString());
+                    Debug.Log(www);
+                    Debug.Log(www.result);
+                    Debug.Log(www.uri);
+                    Debug.Log(www.url);
+
+                    string returnString = www.downloadHandler.text;
+                    Debug.Log(":\nReceived: " + returnString);
+                    gibAny(returnString);
+
+                    break;
             }
-            else
-            {
-                Debug.Log("Form upload complete!");
-            }
+            */
+
+        /*
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log(www.error);
         }
+        else
+        {
+            Debug.Log("Form upload complete!");
+            Debug.Log(www.downloadHandler.text);
+            Debug.Log(www);
+            Debug.Log(www.result);
+            Debug.Log(www.uri);
+            Debug.Log(www.url);
+            gibAny(www.downloadHandler.text);
+        }
+        */
+
+        }
+
+
     }
 
     IEnumerator GetCategory(System.Action<string> gibcat)
@@ -237,31 +329,10 @@ public class UI_Behave : MonoBehaviour
                     break;
                 case UnityWebRequest.Result.Success:
                     string returnString = tokenRequest.downloadHandler.text;
-                    Debug.Log(":\nReceived: " + returnString);
+                    //Debug.Log(":\nReceived: " + returnString);
                     gibcat(returnString);
                     break;
             }
         }
-    }
-    void tokenBugger()
-    {
-        Debug.Log(TokenDebug);
-
-    }
-    void catBugger()
-    {
-        Debug.Log(AllCategories);
-        Debug.Log(AllCategories.trivia_categories);
-
-        foreach (category cat in catDebug)
-        {
-            Debug.Log(cat.name);
-        }
-        //Debug.Log(catDebug);
-    }
-
-    void diffBug(string fromweb)
-    {
-        Debug.Log(fromweb);
     }
 }

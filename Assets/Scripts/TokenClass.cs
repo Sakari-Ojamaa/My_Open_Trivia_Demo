@@ -43,4 +43,71 @@ public class category
     public int id;
     public string name;
 }
+[System.Serializable]
+public class questionData
+{
+    /* Format:
+            Text:
+    {
+	    "response_code":0,
+	    "results":[
+		    {
+			    "category":"Art",
+			    "type":"boolean",
+			    "difficulty":"easy",
+			    "question":"Leonardo da Vinci&#039;s Mona Lisa does not have eyebrows.",
+			    "correct_answer":"True",
+			    "incorrect_answers":[
+				    "False"
+				    ]
+		    },
+		    {
+			    "category":"History",
+			    "type":"boolean",
+			    "difficulty":"easy",
+			    "question":"The United States of America declared their independence from the British Empire on July 4th, 1776.",
+			    "correct_answer":"True",
+			    "incorrect_answers":[
+				    "False"
+				    ]
+		    },
+		    {
+			    "category":"Entertainment: Television","
+			    type":"boolean",
+			    "difficulty":"medium",
+			    "question":"An episode of &quot;The Simpsons&quot; is dedicated to Moe Szyslak&#039;s bar rag.",
+			    "correct_answer":"True",
+			    "incorrect_answers":[
+				    "False"
+				    ]
+		    }
+	    ]
+    }
+     */
+    public int response_code;
+    public List<questionList> results;
+  
+}
+[System.Serializable]
+public class questionList
+{
+    /*Format, contained above:
+     {
+        "category":"Art",
+		"type":"boolean",
+		"difficulty":"easy",
+		"question":"Leonardo da Vinci&#039;s Mona Lisa does not have eyebrows.",
+		"correct_answer":"True",
+		"incorrect_answers":[
+			"False"
+			]
+    },
+     */
 
+    public string category;
+    public string type;
+    public string difficulty;
+    public string question;
+    public string correct_answer;
+    public List<string> incorrect_answers;
+}
