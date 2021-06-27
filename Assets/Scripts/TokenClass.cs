@@ -85,11 +85,11 @@ public class questionData
     }
      */
     public int response_code;
-    public List<questionList> results;
+    public List<questionListElement> results;
   
 }
 [System.Serializable]
-public class questionList
+public class questionListElement
 {
     /*Format, contained above:
      {

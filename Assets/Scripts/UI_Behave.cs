@@ -15,7 +15,7 @@ public class UI_Behave : MonoBehaviour
     public Dropdown Category, Difficulty;
     public InputField QuestionCountField;
 
-    public Button True, False, Submit, Answer1, Answer2, Answer3;
+    public Button True, False, Submit, Answer1, Answer2, Answer3, Answer4;
     public InputField Question, Answer;
 
     public Text GM, CAT, Count, Diff, Star, Que, Ans;
@@ -36,11 +36,21 @@ public class UI_Behave : MonoBehaviour
     private int categoryPH = 0;
     private string typePH = "multiple";
     private bool typeSwitch = true;
+    int SCORE= 0;
+
+    private int CurrentRound = 0;
+    Text[] butts = new Text[4];
 
     //https://opentdb.com/api.php?amount=7&category=9&difficulty=medium&type=multiple
     private void Awake()
     {   //Webfomr to contain game parameters later, amount of games, difficulty, selected category.
         ParamForm = new WWWForm();
+
+        
+        butts[0] = Answer1.GetComponent<Text>();
+        butts[1] = Answer2.GetComponent<Text>();
+        butts[2] = Answer3.GetComponent<Text>();
+        butts[3] = Answer4.GetComponent<Text>();
     }
     void Start()
     {
@@ -61,6 +71,14 @@ public class UI_Behave : MonoBehaviour
         //{ setCategoryForm(Category.itemText.text); });
         Category.onValueChanged.AddListener(delegate { setCategoryForm(Category.value); }); //Listener will pass index selected item
         Difficulty.onValueChanged.AddListener(delegate { setDifficultyForm(Difficulty.value); });
+
+        True.onClick.AddListener(delegate { ReplyButtonFunc(0); });
+        False.onClick.AddListener(delegate { ReplyButtonFunc(1); });
+
+        Answer1.onClick.AddListener(delegate { ReplyButtonFunc(0); });
+        Answer2.onClick.AddListener(delegate { ReplyButtonFunc(1); });
+        Answer3.onClick.AddListener(delegate { ReplyButtonFunc(2); });
+        Answer4.onClick.AddListener(delegate { ReplyButtonFunc(3); });
 
         StartButton.gameObject.SetActive(false);
         GameModeButton1.gameObject.SetActive(false);
@@ -205,7 +223,9 @@ public class UI_Behave : MonoBehaviour
         ParamForm.AddField("type", typePH);
 
         StartCoroutine(SendParam(StartReturn));
-        SetButtons(true, typeSwitch);
+        gameSetUp();
+        //SetButtons(true, typeSwitch);
+        
     }
     void StartReturn(string fromweb)
     {
@@ -230,6 +250,7 @@ public class UI_Behave : MonoBehaviour
         Answer1.gameObject.SetActive(to);
         Answer2.gameObject.SetActive(to);
         Answer3.gameObject.SetActive(to);
+        Answer4.gameObject.SetActive(to);
 
     }
     void SetButtons(bool to, bool GM)
@@ -251,6 +272,146 @@ public class UI_Behave : MonoBehaviour
         {
             True.gameObject.SetActive(to);
             False.gameObject.SetActive(to);
+        }
+    }
+
+    void ReplyButtonFunc(int but)
+    {
+
+        TheGame(but, CurrentRound);
+        CurrentRound++;
+        gameSetUp(CurrentRound);
+    }
+    void TheGame(int input, int iteration)
+    {
+        questionListElement element = questionsDataList.results[iteration];
+        if (element.type == "boolean")
+        {            
+            if (element.correct_answer == "True" && input == 0 || element.correct_answer == "False" && input == 1)
+            {
+                //corr
+                SCORE++;
+            }
+            else
+            {
+                //incorr
+            }
+        }
+        else if (element.type == "multiple")
+        {
+            string corr = element.correct_answer;
+            string answ = butts[input].text;
+            if (answ == corr) SCORE++ ;//corr
+
+        }
+
+    }
+
+    string[] theShuffle(string[] shuff)
+    {
+        for (int i = 0; i < shuff.Length; i++)
+        {
+            string tmp = shuff[i];
+            int r = Random.Range(i, shuff.Length);
+            shuff[i] = shuff[r];
+            shuff[r] = tmp;
+        }
+        return shuff;
+    }
+    void GameRound(int iteration)
+    {
+        string questA = questionsDataList.results[iteration].question;
+        string questB = "Question " + iteration + ": " + questA;
+        Question.text = questB;
+    }
+    void gameSetUp()
+    {
+        CurrentRound = 0;
+        Que.enabled = true;
+        Ans.enabled = true;
+
+        Question.gameObject.SetActive(true);
+        GameRound(0);
+        questionListElement element = questionsDataList.results[0];
+        if(element.type == "boolean")
+        {
+            True.gameObject.SetActive(true);
+            False.gameObject.SetActive(true);
+
+            Answer1.gameObject.SetActive(false);
+            Answer2.gameObject.SetActive(false);
+            Answer3.gameObject.SetActive(false);
+            Answer4.gameObject.SetActive(false);
+
+
+        }
+        else if (element.type == "multiple")
+        {
+            True.gameObject.SetActive(false);
+            False.gameObject.SetActive(false);
+
+            Answer1.gameObject.SetActive(true);
+            Answer2.gameObject.SetActive(true);
+            Answer3.gameObject.SetActive(true);
+            Answer4.gameObject.SetActive(true);
+
+            string[] options = new string[4];
+            options[0] = element.correct_answer;
+            options[1] = element.incorrect_answers[0];
+            options[2] = element.incorrect_answers[1];
+            options[3] = element.incorrect_answers[2];
+            options = theShuffle(options);
+            //GameRound(0, butts, options);
+
+            for (int i = 0; i < 4; i++)
+            {
+                butts[i].text = options[i];
+            }
+        }
+    }
+    void gameSetUp(int iteration)
+    {
+        //CurrentRound = 0;
+        Que.enabled = true;
+        Ans.enabled = true;
+
+        Question.gameObject.SetActive(true);
+        GameRound(iteration);
+        questionListElement element = questionsDataList.results[iteration];
+        if (element.type == "boolean")
+        {
+            True.gameObject.SetActive(true);
+            False.gameObject.SetActive(true);
+
+            Answer1.gameObject.SetActive(false);
+            Answer2.gameObject.SetActive(false);
+            Answer3.gameObject.SetActive(false);
+            Answer4.gameObject.SetActive(false);
+
+
+        }
+        else if (element.type == "multiple")
+        {
+            True.gameObject.SetActive(false);
+            False.gameObject.SetActive(false);
+
+            Answer1.gameObject.SetActive(true);
+            Answer2.gameObject.SetActive(true);
+            Answer3.gameObject.SetActive(true);
+            Answer4.gameObject.SetActive(true);
+
+            string[] options = new string[4];
+            options[0] = element.correct_answer;
+            options[1] = element.incorrect_answers[0];
+            options[2] = element.incorrect_answers[1];
+            options[3] = element.incorrect_answers[2];
+            options = theShuffle(options);
+            //GameRound(0, butts, options);
+
+            for (int i = 0; i < 4; i++)
+            {
+                butts[i].text = options[i];
+            }
         }
     }
 
