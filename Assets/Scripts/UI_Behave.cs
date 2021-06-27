@@ -12,14 +12,14 @@ public class UI_Behave : MonoBehaviour
 
     //This will be scuffed, sorry
 
-    public Button NewGameButton,StartButton,GameModeButton1, GameModeButton2, GameModeButton3;
+    public Button NewGameButton,StartButton,GameModeButton1, GameModeButton2, GameModeButton3, QuitButton;
     public Dropdown Category, Difficulty;
     public InputField QuestionCountField;
 
     public Button True, False, Submit, Answer1, Answer2, Answer3, Answer4;
     public InputField Question, Answer;
 
-    public Text GM, CAT, Count, Diff, Star, Que, Ans, Score, Timer;
+    public Text GM, CAT, Count, Diff, Star, Que, Ans, Score, Timer, QuestionsLeft, FinalScore;
     //public List<Text> TextList = new List<Text>();
 
     public string TokenDebug;
@@ -30,6 +30,8 @@ public class UI_Behave : MonoBehaviour
     Categories AllCategories = new Categories();
     questionData questionsDataList = new questionData();
     WWWForm ParamForm;
+
+    
 
     private int diffNumber = 0;
     private string diffText = "";
@@ -42,7 +44,10 @@ public class UI_Behave : MonoBehaviour
     int SCORE= 0;
 
     private int CurrentRound = 0;
+    private int QueRemain = 0;
     public Text[] butts = new Text[4];
+
+    public QuitGame q;
 
     //https://opentdb.com/api.php?amount=7&category=9&difficulty=medium&type=multiple
     private void Awake()
@@ -70,6 +75,7 @@ public class UI_Behave : MonoBehaviour
         //Difficulty.ClearOptions();
         NewGameButton.onClick.AddListener(NewGame);
         StartButton.onClick.AddListener(StartGame);
+        StartButton.onClick.AddListener(q.QuitTheGame);
         GameModeButton1.onClick.AddListener(delegate { gameType(0); }); 
         GameModeButton2.onClick.AddListener(delegate { gameType(1); });
         GameModeButton3.onClick.AddListener(delegate { gameType(3); });
@@ -256,13 +262,17 @@ public class UI_Behave : MonoBehaviour
         //SetButtons(true, typeSwitch);
         
     }
+
+
     void StartReturn(string fromweb)
     {
         questionData data = new questionData();
         data = JsonUtility.FromJson<questionData>(fromweb);
         questionsDataList = data;
+        QueRemain = questionsDataList.results.Count;
         Debug.Log(fromweb);
         gameSetUp();
+        QuestionsLeft.text = "Questions Remaining: " + QueRemain;
         timerIsRunning = true;
         timeRemaining = 60;
     }
@@ -327,8 +337,11 @@ public class UI_Behave : MonoBehaviour
             Answer2.gameObject.SetActive(false);
             Answer3.gameObject.SetActive(false);
             Answer4.gameObject.SetActive(false);
+            QueRemain = 0;
+            QuestionsLeft.text = "Questions Remaining: " + QueRemain;
         }
-        
+        QueRemain--;
+        QuestionsLeft.text = "Questions Remaining: " + QueRemain;
     }
     void TheGame(int input, int iteration)
     {
