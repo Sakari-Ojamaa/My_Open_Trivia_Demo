@@ -19,7 +19,7 @@ public class UI_Behave : MonoBehaviour
     public Button True, False, Submit, Answer1, Answer2, Answer3, Answer4;
     public InputField Question, Answer;
 
-    public Text GM, CAT, Count, Diff, Star, Que, Ans, Score;
+    public Text GM, CAT, Count, Diff, Star, Que, Ans, Score, Timer;
     //public List<Text> TextList = new List<Text>();
 
     public string TokenDebug;
@@ -36,6 +36,8 @@ public class UI_Behave : MonoBehaviour
     private int roundCount = 10;
     private int categoryPH = 0;
     private string typePH = "multiple";
+    private bool timerIsRunning = false;
+    private float timeRemaining = 60;
     //private bool typeSwitch = true;
     int SCORE= 0;
 
@@ -88,6 +90,7 @@ public class UI_Behave : MonoBehaviour
         StartButton.gameObject.SetActive(false);
         GameModeButton1.gameObject.SetActive(false);
         GameModeButton2.gameObject.SetActive(false);
+        GameModeButton3.gameObject.SetActive(false);
 
         Category.gameObject.SetActive(false);
         Difficulty.gameObject.SetActive(false);
@@ -103,6 +106,25 @@ public class UI_Behave : MonoBehaviour
         Que.enabled = false;
         Ans.enabled = false;
     }
+    private void FixedUpdate()
+    {
+        if (timerIsRunning)
+        {
+            if (timeRemaining > 0)
+            {
+                timeRemaining -= Time.deltaTime;
+            }
+            else
+            {
+                Debug.Log("Time has run out!");
+                timeRemaining = 0;
+                timerIsRunning = false;
+
+                SetButtons(false);
+            }
+            Timer.text = "Time remaining: " + timeRemaining;
+        }
+    }
 
     void NewGame()
     {
@@ -112,6 +134,7 @@ public class UI_Behave : MonoBehaviour
         GM.enabled = true;
         GameModeButton1.gameObject.SetActive(true);
         GameModeButton2.gameObject.SetActive(true);
+        GameModeButton3.gameObject.SetActive(true);
     }
     public void tokenStorage(string fromweb)
     {
@@ -240,6 +263,8 @@ public class UI_Behave : MonoBehaviour
         questionsDataList = data;
         Debug.Log(fromweb);
         gameSetUp();
+        timerIsRunning = true;
+        timeRemaining = 60;
     }
     void SetButtons(bool to)
     {
@@ -294,6 +319,14 @@ public class UI_Behave : MonoBehaviour
         }catch (ArgumentOutOfRangeException)
         {
             Debug.Log("Out of questions");
+
+            True.gameObject.SetActive(false);
+            False.gameObject.SetActive(false);
+
+            Answer1.gameObject.SetActive(false);
+            Answer2.gameObject.SetActive(false);
+            Answer3.gameObject.SetActive(false);
+            Answer4.gameObject.SetActive(false);
         }
         
     }
