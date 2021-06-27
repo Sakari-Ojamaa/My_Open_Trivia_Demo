@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -11,14 +12,14 @@ public class UI_Behave : MonoBehaviour
 
     //This will be scuffed, sorry
 
-    public Button NewGameButton,StartButton,GameModeButton1, GameModeButton2;
+    public Button NewGameButton,StartButton,GameModeButton1, GameModeButton2, GameModeButton3;
     public Dropdown Category, Difficulty;
     public InputField QuestionCountField;
 
     public Button True, False, Submit, Answer1, Answer2, Answer3, Answer4;
     public InputField Question, Answer;
 
-    public Text GM, CAT, Count, Diff, Star, Que, Ans;
+    public Text GM, CAT, Count, Diff, Star, Que, Ans, Score;
     //public List<Text> TextList = new List<Text>();
 
     public string TokenDebug;
@@ -35,22 +36,25 @@ public class UI_Behave : MonoBehaviour
     private int roundCount = 10;
     private int categoryPH = 0;
     private string typePH = "multiple";
-    private bool typeSwitch = true;
+    //private bool typeSwitch = true;
     int SCORE= 0;
 
     private int CurrentRound = 0;
-    Text[] butts = new Text[4];
+    public Text[] butts = new Text[4];
 
     //https://opentdb.com/api.php?amount=7&category=9&difficulty=medium&type=multiple
     private void Awake()
     {   //Webfomr to contain game parameters later, amount of games, difficulty, selected category.
         ParamForm = new WWWForm();
 
-        
+        /*
         butts[0] = Answer1.GetComponent<Text>();
+        //Answer1.GetComponent<Text>().text = "test";
         butts[1] = Answer2.GetComponent<Text>();
         butts[2] = Answer3.GetComponent<Text>();
         butts[3] = Answer4.GetComponent<Text>();
+        */
+        butts[0].text = "test";
     }
     void Start()
     {
@@ -66,6 +70,7 @@ public class UI_Behave : MonoBehaviour
         StartButton.onClick.AddListener(StartGame);
         GameModeButton1.onClick.AddListener(delegate { gameType(0); }); 
         GameModeButton2.onClick.AddListener(delegate { gameType(1); });
+        GameModeButton3.onClick.AddListener(delegate { gameType(3); });
 
         QuestionCountField.onValueChanged.AddListener(delegate { setCount(int.Parse(QuestionCountField.text)); });
         //{ setCategoryForm(Category.itemText.text); });
@@ -103,6 +108,7 @@ public class UI_Behave : MonoBehaviour
     {
         Debug.Log("New Game!");
         StartCoroutine(GetToken(tokenStorage)); //Coroutine for IEnumerator
+        SCORE = 0;
         GM.enabled = true;
         GameModeButton1.gameObject.SetActive(true);
         GameModeButton2.gameObject.SetActive(true);
@@ -136,7 +142,8 @@ public class UI_Behave : MonoBehaviour
     void gameType(int i) //multiple clics could corrupt the WWWForm
     {
         if (i == 0) typePH = "multiple";//ParamForm.AddField("type", "multiple");
-        else typePH = "boolean"; //ParamForm.AddField("type", "bool");
+        else if (i == 1) typePH = "boolean"; //ParamForm.AddField("type", "bool");
+        else typePH = "";
 
         CAT.enabled = true;
         Count.enabled = true;
@@ -199,7 +206,6 @@ public class UI_Behave : MonoBehaviour
                 break; //end loop
             }
         } //no field for "category" is added if no recognized category is selected, open trivia acts on default
-        
 
         switch (diffNumber) //Difficulties cannot be pulled from API like categories, requires hard definitions for each element in dropdown.
         {
@@ -223,7 +229,7 @@ public class UI_Behave : MonoBehaviour
         ParamForm.AddField("type", typePH);
 
         StartCoroutine(SendParam(StartReturn));
-        gameSetUp();
+        
         //SetButtons(true, typeSwitch);
         
     }
@@ -233,6 +239,7 @@ public class UI_Behave : MonoBehaviour
         data = JsonUtility.FromJson<questionData>(fromweb);
         questionsDataList = data;
         Debug.Log(fromweb);
+        gameSetUp();
     }
     void SetButtons(bool to)
     {
@@ -280,7 +287,15 @@ public class UI_Behave : MonoBehaviour
 
         TheGame(but, CurrentRound);
         CurrentRound++;
-        gameSetUp(CurrentRound);
+        try
+        {
+            questionListElement data = questionsDataList.results[CurrentRound];
+            gameSetUp(CurrentRound);
+        }catch (ArgumentOutOfRangeException)
+        {
+            Debug.Log("Out of questions");
+        }
+        
     }
     void TheGame(int input, int iteration)
     {
@@ -304,6 +319,7 @@ public class UI_Behave : MonoBehaviour
             if (answ == corr) SCORE++ ;//corr
 
         }
+        Score.text = "Score: " + SCORE;
 
     }
 
@@ -312,7 +328,7 @@ public class UI_Behave : MonoBehaviour
         for (int i = 0; i < shuff.Length; i++)
         {
             string tmp = shuff[i];
-            int r = Random.Range(i, shuff.Length);
+            int r = UnityEngine.Random.Range(i, shuff.Length);
             shuff[i] = shuff[r];
             shuff[r] = tmp;
         }
@@ -327,6 +343,7 @@ public class UI_Behave : MonoBehaviour
     void gameSetUp()
     {
         CurrentRound = 0;
+        Score.text = "Score: " + SCORE;
         Que.enabled = true;
         Ans.enabled = true;
 
@@ -455,7 +472,11 @@ public class UI_Behave : MonoBehaviour
         if (diffText != "")
         {
             uriB = uriB + "&" + "difficulty=" + diffText;
-        }        
+        }
+        if (typePH != "")
+        {
+            uriB = uriB + "&" + "type=" + typePH;
+        }
         uriB = uriB + "&" + "type=" + typePH + "&" + "token=" + TokenDebug;
         Debug.Log(uriB);        
         using (UnityWebRequest www = UnityWebRequest.Get(uriB)) //Let Unity handle formatting for passing parameters of game
